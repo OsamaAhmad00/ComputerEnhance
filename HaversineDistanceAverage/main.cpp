@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "HaversineDistance.hpp"
+#include "../HaversineDistanceInputJSONGenerator/GenerateJSON.hpp"
 
 double compute_average(const std::string& filename) {
     enum {
@@ -135,6 +136,14 @@ double compute_average(const std::string& filename) {
     }
 
     return sum / size;
+}
+
+void test_multiple_files(int runs = 100, int points_count = 1000000) {
+    for (int i = 0; i < runs; ++i) {
+        generate_points_json_ofstream("output.json", points_count);
+        auto average = compute_average("output.json");
+        std::cout << "Average = " << average << '\n';
+    }
 }
 
 int main(int argc, char** argv) {
