@@ -3,8 +3,39 @@
 
 #include "HaversineDistance.hpp"
 #include "../HaversineDistanceInputJSONGenerator/GenerateJSON.hpp"
+#include "../EstimateTSCFrequency/EstimateTSCFrequency.hpp"
 
-double compute_average(const std::string& filename) {
+struct TicksCounter {
+    inline static uint64_t tsc_freq = estimate_tsc_frequency(100);
+
+    uint64_t sum = 0;
+    uint64_t start = 0;
+
+    void play() {
+        start = read_tsc();
+    }
+
+    void pause() {
+        sum += read_tsc() - start;
+    }
+
+    double ms() {
+        return sum * 1000 / static_cast<double>(tsc_freq);
+    }
+};
+
+struct Report {
+    TicksCounter read_ticks;
+    TicksCounter parse_ticks;
+    TicksCounter compute_ticks;
+    TicksCounter total_ticks;
+};
+
+std::pair<double, Report> compute_average(const std::string& filename) {
+    Report report;
+
+    report.total_ticks.play();
+
     enum {
         Global,
         InsideArray,
@@ -21,7 +52,13 @@ double compute_average(const std::string& filename) {
     std::string key;
     std::string value;
     size_t line_num = 1;
-    while (std::getline(input, line)) {
+    while (true) {
+
+        report.read_ticks.play();
+        if (!std::getline(input, line)) break;
+        report.read_ticks.pause();
+
+        report.parse_ticks.play();
         double x0, y0, x1, y1;
         bool x0_found = false;
         bool y0_found = false;
@@ -123,10 +160,13 @@ double compute_average(const std::string& filename) {
                 }
             }
         }
+        report.parse_ticks.pause();
 
         // std::cout << std::format("Line {}: x0 = {}, y0 = {}, x1 = {}, y1 = {}\n", line_num, x0, y0, x1, y1);
 
+        report.compute_ticks.play();
         sum += haversine_distance(x0, y0, x1, y1, EarthRadius);
+        report.compute_ticks.pause();
 
         ++line_num;
     }
@@ -135,14 +175,16 @@ double compute_average(const std::string& filename) {
         std::cerr << "Input must end with ']'\n";
     }
 
-    return sum / size;
+    report.total_ticks.pause();
+
+    return { sum / size, report };
 }
 
 void test_multiple_files(int runs = 100, int points_count = 1000000) {
     for (int i = 0; i < runs; ++i) {
         generate_points_json_ofstream("output.json", points_count);
         auto average = compute_average("output.json");
-        std::cout << "Average = " << average << '\n';
+        std::cout << "Average = " << average.first << '\n';
     }
 }
 
@@ -152,5 +194,18 @@ int main(int argc, char** argv) {
         std::exit(1);
     }
 
-    std::cout << "Average = " << compute_average(argv[1]) << '\n';
+    auto[average, report] = compute_average(argv[1]);
+
+    auto read = report.read_ticks.ms();
+    auto parse = report.parse_ticks.ms();
+    auto compute = report.compute_ticks.ms();
+    auto total = report.total_ticks.ms();
+    auto total_sum = read + parse + compute;
+
+    std::cout << "Average = " << average << '\n';
+    std::cout << "Read time = " << read << "ms (" << read / total_sum * 100 << "%)\n";
+    std::cout << "Parse time = " << parse << "ms (" << parse / total_sum * 100 << "%)\n";
+    std::cout << "Compute time = " << compute << "ms (" << compute / total_sum * 100 << "%)\n";
+    std::cout << "Total time = " << total << "ms\n";
+    std::cout << "Total time - Time sum = " << total - total_sum << "ms\n";
 }
