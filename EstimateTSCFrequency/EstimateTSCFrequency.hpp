@@ -7,13 +7,13 @@
 #include <intrin.h>
 #include <windows.h>
 
-static uint64_t get_os_counter() {
+inline uint64_t get_os_counter() {
     LARGE_INTEGER li;
     QueryPerformanceCounter(&li);
     return li.QuadPart;
 }
 
-static uint64_t get_os_frequency() {
+inline uint64_t get_os_frequency() {
     LARGE_INTEGER li;
     QueryPerformanceFrequency(&li);
     return li.QuadPart;
@@ -24,13 +24,13 @@ static uint64_t get_os_frequency() {
 #include <x86intrin.h>
 #include <sys/time.h>
 
-static uint64_t get_os_counter() {
+inline uint64_t get_os_counter() {
     struct timeval tv;
     gettimeofday(&tv, nullptr);
     return tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
-static uint64_t get_os_frequency() {
+inline uint64_t get_os_frequency() {
     // This counts microseconds, so 1M times per second.
     return 1000000;
 }

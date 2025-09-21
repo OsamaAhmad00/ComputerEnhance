@@ -8,6 +8,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    std::cout << "Operating system frequency: " << get_os_frequency() << '\n';
     auto freq = estimate_tsc_frequency(std::stoull(argv[1]));
-    std::cout << "Estimated frequency: " << freq << '\n';
+    std::cout << "Estimated TSC frequency: " << freq << '\n';
 }
