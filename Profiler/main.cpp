@@ -1,5 +1,7 @@
 #include <iostream>
 
+#define PROFILE
+
 #include "Profiler.hpp"
 
 std::string str;

@@ -5,6 +5,8 @@
 #include "../HaversineDistanceInputJSONGenerator/GenerateJSON.hpp"
 #include "../EstimateTSCFrequency/EstimateTSCFrequency.hpp"
 
+// #define PROFILE
+
 #include "../Profiler/Profiler.hpp"
 #include "../Profiler/Profiler.cpp"  // Quick hack instead of linking with anything else
 

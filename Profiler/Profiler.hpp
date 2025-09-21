@@ -36,9 +36,9 @@ struct ProfilerData : public std::array<ProfilerAnchor, MAX_PROFILER_ANCHORS> {
     }
 
     [[nodiscard]] std::string report() const {
-        std::string result;
         auto global_time = static_cast<double>(global_end_time - global_start_time);
         auto frequency = static_cast<double>(estimate_tsc_frequency(100));
+        std::string result = std::format("Total={}, {:.3f}ms\n\n", global_time, (global_time * 1000) / frequency);
         for (ProfilerAnchorID i = 1; i <= max_anchor_id; ++i) {
             auto& anchor = (*this)[i];
             auto inclusive_percentage = (anchor.inclusive_time * 100 ) / global_time;
@@ -61,6 +61,8 @@ struct ProfilerData : public std::array<ProfilerAnchor, MAX_PROFILER_ANCHORS> {
 // any block. This is to have simpler logic for the topmost block.
 extern ProfilerAnchorID top_profiler_anchor_id;
 extern ProfilerData profiler_data;
+
+#ifdef PROFILE
 
 struct ProfileScope {
     uint64_t start_time;
@@ -97,3 +99,9 @@ struct ProfileScope {
 
 // The 0th location is reserved for the root anchor.
 #define profile_scope(name) ProfileScope __profile_scope_instance_##__LINE__(name, __COUNTER__ + 1)
+
+#else
+
+#define profile_scope(...)
+
+#endif
