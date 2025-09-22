@@ -5,14 +5,12 @@
 #include "../HaversineDistanceInputJSONGenerator/GenerateJSON.hpp"
 #include "../EstimateTSCFrequency/EstimateTSCFrequency.hpp"
 
-// #define PROFILE
+#define PROFILE
 
 #include "../Profiler/Profiler.hpp"
 #include "../Profiler/Profiler.cpp"  // Quick hack instead of linking with anything else
 
 double compute_average(const std::string& filename) {
-    profile_scope("Total");
-
     enum {
         Global,
         InsideArray,
@@ -32,14 +30,19 @@ double compute_average(const std::string& filename) {
     while (true) {
 
         {
-            profile_scope("Read");
-            if (!std::getline(input, line)) break;
+            bool read_line = true;
+            profile_scope_with_throughput_lambda("Read", [&] {
+                read_line = (bool)std::getline(input, line);
+                return line.size();
+            });
+
+            if (!read_line) break;
         }
 
         double x0, y0, x1, y1;
 
         {
-            profile_scope("Parse");
+            profile_scope_with_throughput("Parse", line.size());
             bool x0_found = false;
             bool y0_found = false;
             bool x1_found = false;
@@ -145,7 +148,7 @@ double compute_average(const std::string& filename) {
         // std::cout << std::format("Line {}: x0 = {}, y0 = {}, x1 = {}, y1 = {}\n", line_num, x0, y0, x1, y1);
 
         {
-            profile_scope("Compute");
+            profile_scope_with_throughput("Compute", 5 * sizeof(double));
             sum += haversine_distance(x0, y0, x1, y1, EarthRadius);
         }
 
@@ -179,5 +182,6 @@ int main(int argc, char** argv) {
 
     std::cout << "Average = " << average << "\n\n";
 
-    std::cout << profiler_data.report() << '\n';
+    std::cout << profiler_data.report_timing() << "\n\n";
+    std::cout << profiler_data.report_throughput() << "\n\n";
 }
