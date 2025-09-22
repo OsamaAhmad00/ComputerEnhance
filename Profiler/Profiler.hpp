@@ -1,10 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <array>
 #include <cassert>
 #include <format>
 #include <string>
+#include <ranges>
 
 #include "../EstimateTSCFrequency/EstimateTSCFrequency.hpp"
 
@@ -17,6 +19,34 @@ struct ProfilerAnchor {
     uint64_t inclusive_time;  // Time spent inside this block and all its children
     uint64_t exclusive_time;  // Time spent inside this block alone
     uint64_t used_count;      // The number of times it was used
+    uint64_t bytes_processed; // The number of bytes processed by this block
+
+    [[nodiscard]] std::string report_timing(double global_time, double frequency) const {
+        auto inclusive_percentage = (inclusive_time * 100 ) / global_time;
+        auto exclusive_percentage = (exclusive_time * 100 ) / global_time;
+        auto inclusive_time_ms    = (inclusive_time * 1000) / frequency;
+        auto exclusive_time_ms    = (exclusive_time * 1000) / frequency;
+        return std::format(
+            "{}\t: inclusive={}, {:.3f}ms ({:.3f}%),\texclusive={}, {:.3f}ms ({:.3f}%),\tuse_count={}\n",
+            name,
+            inclusive_time, inclusive_time_ms, inclusive_percentage,
+            exclusive_time, exclusive_time_ms, exclusive_percentage,
+            used_count
+        );
+    }
+
+    [[nodiscard]] std::string report_throughput(double frequency) const {
+        auto inclusive_time_sec = inclusive_time / frequency;
+        auto megabytes = bytes_processed / double(1024 * 1024);
+        auto throughput = bytes_processed / (inclusive_time_sec * 1024 * 1024 * 1024);
+        return std::format(
+            "{}\t: processed {:.3f} MB at rate {:.3f} GB/s,\tuse_count={}\n",
+            name,
+            megabytes,
+            throughput,
+            used_count
+        );
+    }
 };
 
 // We don't want any dynamic allocations, so we use a static array.
@@ -35,24 +65,30 @@ struct ProfilerData : public std::array<ProfilerAnchor, MAX_PROFILER_ANCHORS> {
         global_end_time = read_tsc();
     }
 
-    [[nodiscard]] std::string report() const {
-        auto global_time = static_cast<double>(global_end_time - global_start_time);
-        auto frequency = static_cast<double>(estimate_tsc_frequency(100));
+    [[nodiscard]] std::string report_timing() const {
+        const auto global_time = static_cast<double>(global_end_time - global_start_time);
+        const auto frequency = static_cast<double>(estimate_tsc_frequency(100));
         std::string result = std::format("Total={}, {:.3f}ms\n\n", global_time, (global_time * 1000) / frequency);
         for (ProfilerAnchorID i = 1; i <= max_anchor_id; ++i) {
-            auto& anchor = (*this)[i];
-            auto inclusive_percentage = (anchor.inclusive_time * 100 ) / global_time;
-            auto exclusive_percentage = (anchor.exclusive_time * 100 ) / global_time;
-            auto inclusive_time_ms    = (anchor.inclusive_time * 1000) / frequency;
-            auto exclusive_time_ms    = (anchor.exclusive_time * 1000) / frequency;
-            result += std::format(
-                "{}\t: inclusive={}, {:.3f}ms ({:.3f}%),\texclusive={}, {:.3f}ms ({:.3f}%),\tuse_count={}\n",
-                anchor.name,
-                anchor.inclusive_time, inclusive_time_ms, inclusive_percentage,
-                anchor.exclusive_time, exclusive_time_ms, exclusive_percentage,
-                anchor.used_count
-            );
+            result += (*this)[i].report_timing(global_time, frequency);
         }
+        return result;
+    }
+
+    [[nodiscard]] std::string report_throughput() const {
+        const auto global_time = static_cast<double>(global_end_time - global_start_time);
+        const auto frequency = static_cast<double>(estimate_tsc_frequency(100));
+
+        auto bytes = std::views::counted(data() + 1, max_anchor_id - 1) |
+            std::views::transform(&ProfilerAnchor::bytes_processed);
+        auto total_bytes_processed = std::ranges::fold_left(bytes, 0ULL, std::plus());
+
+        std::string result = std::format("Total Processed Data = {} MB\n\n", total_bytes_processed);
+
+        for (ProfilerAnchorID i = 1; i <= max_anchor_id; ++i) {
+            result += (*this)[i].report_throughput(frequency);
+        }
+
         return result;
     }
 };
@@ -69,10 +105,11 @@ struct ProfileScope {
     uint64_t old_inclusive_time;
     ProfilerAnchorID id;
     ProfilerAnchorID parent_id;
+    uint64_t bytes_processed;
 
-    explicit ProfileScope(const char* name, const ProfilerAnchorID id)
+    explicit ProfileScope(const char* name, const ProfilerAnchorID id, uint64_t bytes_processed = 0)
         : start_time(read_tsc()), old_inclusive_time(profiler_data[id].inclusive_time),
-          id(id), parent_id(top_profiler_anchor_id)
+          id(id), parent_id(top_profiler_anchor_id), bytes_processed(bytes_processed)
     {
         assert(id < MAX_PROFILER_ANCHORS && "Profiler anchor ID is out of range. You've used too many scope profilers");
         profiler_data[id].name = name;
@@ -93,12 +130,15 @@ struct ProfileScope {
         anchor.inclusive_time = old_inclusive_time + time_delta;  // Overwrite children's writings
         anchor.used_count++;
 
+        anchor.bytes_processed += bytes_processed;
+
         top_profiler_anchor_id = parent_id;
     }
 };
 
 // The 0th location is reserved for the root anchor.
-#define profile_scope(name) ProfileScope __profile_scope_instance_##__LINE__(name, __COUNTER__ + 1)
+#define profile_scope_with_throughput(name, size) ProfileScope __profile_scope_instance_##__LINE__(name, __COUNTER__ + 1, size)
+#define profile_scope(name) profile_scope_with_throughput(name, 0)
 
 #else
 

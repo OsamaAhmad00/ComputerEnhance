@@ -13,23 +13,25 @@ int rand_size() {
 void B(int depth);
 
 void A(int depth = 1) {
-    profile_scope("A");
+    const auto iterations = 1000;
+    const auto size = rand_size();
+    profile_scope_with_throughput("A", iterations * size);
     if (depth >= 1000) {
         return;
     }
-    for (int i = 0; i < 1000; i++) {
-        profile_scope("A Loop");
-        const auto size = rand_size();
+    for (int i = 0; i < iterations; i++) {
+        profile_scope_with_throughput("A Loop", size);
         str += std::string(size, 'A');
     }
     B(depth + 1);
 }
 
 void B(int depth) {
-    profile_scope("B");
-    for (int i = 0; i < 1000; i++) {
-        profile_scope("B Loop");
-        const auto size = rand_size();
+    const auto iterations = 1000;
+    const auto size = rand_size();
+    profile_scope_with_throughput("B", iterations * size);
+    for (int i = 0; i < iterations; i++) {
+        profile_scope_with_throughput("B Loop", size);
         str += std::string(size, 'B');
     }
     A(depth + 1);
@@ -40,5 +42,6 @@ int main() {
     profiler_data.start_profiling();
     A();
     profiler_data.end_profiling();
-    std::cout << profiler_data.report();
+    std::cout << profiler_data.report_timing() << "\n\n";
+    std::cout << profiler_data.report_throughput() << "\n\n";
 }
