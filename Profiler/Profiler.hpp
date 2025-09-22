@@ -137,11 +137,15 @@ struct ProfileScope {
 };
 
 // The 0th location is reserved for the root anchor.
-#define profile_scope_with_throughput(name, size) ProfileScope __profile_scope_instance_##__LINE__(name, __COUNTER__ + 1, size)
+#define PROFILER_VAR_NAME(name) __profile_scope_instance_##__LINE__
+#define profile_scope_with_throughput(name, size) ProfileScope PROFILER_VAR_NAME(name) (name, __COUNTER__ + 1, size)
 #define profile_scope(name) profile_scope_with_throughput(name, 0)
+#define profile_scope_with_throughput_lambda(name, lambda) profile_scope(name); PROFILER_VAR_NAME(name).bytes_processed = lambda()
 
 #else
 
 #define profile_scope(...)
+#define profile_scope_with_throughput(...)
+#define profile_scope_with_throughput_lambda(...)
 
 #endif
