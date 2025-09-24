@@ -26,7 +26,7 @@ struct RepetitionTestingResult {
 class RepetitionTester {
 
     static constexpr auto NOT_TESTING = 0;
-    static constexpr auto MAX_PERIOD_WITH_NO_NEW_MAX_IN_SEC = 10;
+    static constexpr auto MAX_PERIOD_WITH_NO_NEW_MAX_IN_SEC = 2;
     static constexpr auto NEW_MAX_DIFF_GRANULARITY = 0.01;
 
     double secs_since_last_max = 0;
@@ -108,13 +108,13 @@ public:
         done = false;
     }
 
-    void reset(std::string new_name, uint64_t new_cpu_freq) {
+    void reset(std::string new_name = "", uint64_t new_cpu_freq = 0) {
         result = { };
-        name = std::move(new_name);
-        cpu_freq = new_cpu_freq;
-        start_ticks = NOT_TESTING;
         result.bytes_per_iteration = processing_bytes;
-        done = false;
+        if (!new_name.empty()) name = std::move(new_name);
+        if (new_cpu_freq) cpu_freq = new_cpu_freq;
+        start_ticks = NOT_TESTING;
+        reset_timer();
     }
 
     static void error(const std::string& message) {

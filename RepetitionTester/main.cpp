@@ -53,38 +53,45 @@ int main(int ArgCount, char **Args)
 #endif
 
         read_parameters Params = {};
-        Params.Dest = AllocateBuffer(Stat.st_size);
         Params.FileName = FileName;
 
-        auto n = ArrayCount(TestFunctions);
+        const auto n = std::size(TestFunctions);
         std::vector<RepetitionTester> testers;
         testers.reserve(n);
         for(u32 FuncIndex = 0; FuncIndex < n; ++FuncIndex) {
-            testers.emplace_back(TestFunctions[FuncIndex].Name, CPUTimerFreq, Params.Dest.Count);
+            testers.emplace_back(TestFunctions[FuncIndex].Name, CPUTimerFreq, Stat.st_size);
         }
 
-        if(Params.Dest.Count > 0)
-        {
+        // if(Params.Dest.Count > 0)
+        // {
             for(;;)
             {
+                // With this setup, where we always allocate before
+                // the tests, you'll find that the first function almost
+                // always gets the slowest iteration as iteration 0. This
+                // is because the first access to the memory causes page
+                // faults, which causes it to slow down a lot
+                Params.Dest = AllocateBuffer(Stat.st_size);
                 for(u32 FuncIndex = 0; FuncIndex < n; ++FuncIndex)
                 {
                     test_function TestFunc = TestFunctions[FuncIndex];
                     auto& tester = testers[FuncIndex];
                     TestFunc.Func(&tester, &Params);
                     std::cout << tester.report() << '\n';
-                    tester.reset_timer();
+                    // tester.reset_timer();
+                    tester.reset();
                 }
+                FreeBuffer(&Params.Dest);
             }
 
             // NOTE(casey): We would normally call this here, but we can't because the compiler will complain about "unreachable code".
             // So instead we just reference the pointer to prevent the compiler complaining about unused function :(
             (void)&FreeBuffer;
-        }
-        else
-        {
-            fprintf(stderr, "ERROR: Test data size must be non-zero\n");
-        }
+        // }
+        // else
+        // {
+        //     fprintf(stderr, "ERROR: Test data size must be non-zero\n");
+        // }
     }
     else
     {
