@@ -5,18 +5,32 @@
 
 #define F(name) { #name, name }
 
-extern "C" void dependent_adds(size_t n);
-extern "C" void independent_adds(size_t n);
-
 struct Function {
     const char* name;
     void (*func)(size_t);
 };
 
+#ifdef _WIN32
+
+extern "C" void dependent_adds_win(size_t n);
+extern "C" void independent_adds_win(size_t n);
+
 Function functions[] = {
-    F(dependent_adds),
-    F(independent_adds),
+    F(dependent_adds_win),
+    F(independent_adds_win),
 };
+
+#else
+
+extern "C" void dependent_adds_linux(size_t n);
+extern "C" void independent_adds_linux(size_t n);
+
+Function functions[] = {
+    F(dependent_adds_linux),
+    F(independent_adds_linux),
+};
+
+#endif
 
 void test(size_t n, size_t repetitions) {
     auto freq = estimate_tsc_frequency(100);
@@ -48,3 +62,4 @@ void test(size_t n, size_t repetitions) {
 int main() {
     test(10000000, 1000000000000);
 }
+
