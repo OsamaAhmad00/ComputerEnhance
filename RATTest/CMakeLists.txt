@@ -5,7 +5,9 @@ set(CMAKE_CXX_STANDARD 26)
 
 enable_language(ASM)
 
-add_compile_options(-stdlib=libc++)
-add_link_options(-stdlib=libc++)
+if (UNIX)
+    add_compile_options(-stdlib=libc++)
+    add_link_options(-stdlib=libc++)
+endif()
 
 add_executable(RATTest main.cpp Loops.s)
