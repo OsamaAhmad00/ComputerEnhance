@@ -17,23 +17,23 @@
 
 # Linux ABI
 
-load1:
 .align 64
+load1:
     mov rax, [rsi]  # second arg, data pointer
     sub rdi, 1      # first arg, number of repetitions
     jg load1
     ret
 
-load2:
 .align 64
+load2:
     mov rax, [rsi]  # second arg, data pointer
     mov rax, [rsi]  # second arg, data pointer
     sub rdi, 2      # first arg, number of repetitions
     jg load2
     ret
 
-load3:
 .align 64
+load3:
     mov rax, [rsi]  # second arg, data pointer
     mov rax, [rsi]  # second arg, data pointer
     mov rax, [rsi]  # second arg, data pointer
@@ -41,8 +41,8 @@ load3:
     jg load3
     ret
 
-load4:
 .align 64
+load4:
     mov rax, [rsi]  # second arg, data pointer
     mov rax, [rsi]  # second arg, data pointer
     mov rax, [rsi]  # second arg, data pointer
@@ -51,23 +51,23 @@ load4:
     jg load4
     ret
 
-store1:
 .align 64
+store1:
     mov [rsi], rax  # second arg, data pointer. will store whatever is in rax
     sub rdi, 1      # first arg, number of repetitions
     jg store1
     ret
 
-store2:
 .align 64
+store2:
     mov [rsi], rax  # second arg, data pointer. will store whatever is in rax
     mov [rsi], rax  # second arg, data pointer. will store whatever is in rax
     sub rdi, 1      # first arg, number of repetitions
     jg store2
     ret
 
-store3:
 .align 64
+store3:
     mov [rsi], rax  # second arg, data pointer. will store whatever is in rax
     mov [rsi], rax  # second arg, data pointer. will store whatever is in rax
     mov [rsi], rax  # second arg, data pointer. will store whatever is in rax
@@ -75,8 +75,8 @@ store3:
     jg store3
     ret
 
-store4:
 .align 64
+store4:
     mov [rsi], rax  # second arg, data pointer. will store whatever is in rax
     mov [rsi], rax  # second arg, data pointer. will store whatever is in rax
     mov [rsi], rax  # second arg, data pointer. will store whatever is in rax

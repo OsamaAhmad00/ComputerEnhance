@@ -9,8 +9,8 @@
 
 aligned_to_64:
     xor rax, rax
-1:
 .align 64
+1:
     inc rax
     cmp rax, rcx
     jl 1b
@@ -18,9 +18,9 @@ aligned_to_64:
 
 aligned_to_63:
     xor rax, rax
-1:
 .align 64
 .rept 63
+1:
 nop
 .endr
     inc rax
@@ -30,9 +30,9 @@ nop
 
 aligned_to_31:
     xor rax, rax
-1:
 .align 64
 .rept 31
+1:
 nop
 .endr
     inc rax
@@ -42,9 +42,9 @@ nop
 
 aligned_to_15:
     xor rax, rax
-1:
 .align 64
 .rept 15
+1:
 nop
 .endr
     inc rax
