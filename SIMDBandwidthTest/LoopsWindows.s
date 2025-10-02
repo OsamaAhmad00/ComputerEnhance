@@ -6,6 +6,7 @@
 .globl two_reads_8_bytes
 .globl two_reads_16_bytes
 .globl two_reads_32_bytes
+.globl two_reads_32_aligned_bytes
 
 .text
 
@@ -71,6 +72,17 @@ two_reads_32_bytes:
     add rax, 64
     vmovdqu ymm0, [rdx + 0]
     vmovdqu ymm0, [rdx + 32]
+    cmp rax, rcx
+    jl 1b
+    ret
+
+two_reads_32_aligned_bytes:
+    xor rax, rax
+.align 64
+1:
+    add rax, 64
+    vmovdqa ymm0, [rdx + 0]
+    vmovdqa ymm0, [rdx + 32]
     cmp rax, rcx
     jl 1b
     ret

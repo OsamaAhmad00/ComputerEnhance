@@ -11,6 +11,7 @@ extern "C" void two_reads_4_bytes(size_t n, std::byte* data);
 extern "C" void two_reads_8_bytes(size_t n, std::byte* data);
 extern "C" void two_reads_16_bytes(size_t n, std::byte* data);
 extern "C" void two_reads_32_bytes(size_t n, std::byte* data);
+extern "C" void two_reads_32_aligned_bytes(size_t n, std::byte* data);
 
 struct Function {
     const char* name;
@@ -24,6 +25,7 @@ Function functions[] = {
     F(two_reads_8_bytes),
     F(two_reads_16_bytes),
     F(two_reads_32_bytes),
+    F(two_reads_32_aligned_bytes),
 };
 
 void test(size_t n, size_t repetitions) {
@@ -36,7 +38,7 @@ void test(size_t n, size_t repetitions) {
     }
 
     constexpr int max_width = 32 * 2;
-    std::byte arr[max_width];
+    alignas(64) std::byte arr[max_width];
 
     constexpr int step = 100;
     for (size_t _a = 0; _a < repetitions; _a += step) {
