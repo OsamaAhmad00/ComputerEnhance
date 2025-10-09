@@ -6,6 +6,22 @@
 #define F(name) { #name, name }
 
 extern "C" void touch_2KB(size_t n, std::byte* data);
+extern "C" void touch_2KB_6_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_8_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_10_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_12_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_14_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_16_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_18_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_19_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_20_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_21_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_22_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_24_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_32_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_40_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_48_loads(size_t n, std::byte* data);
+extern "C" void touch_2KB_64_loads(size_t n, std::byte* data);
 extern "C" void touch_4KB(size_t n, std::byte* data);
 extern "C" void touch_8KB(size_t n, std::byte* data);
 extern "C" void touch_16KB(size_t n, std::byte* data);
@@ -33,6 +49,22 @@ struct Function {
 
 Function functions[] = {
     F(touch_2KB),
+    F(touch_2KB_6_loads),
+    F(touch_2KB_8_loads),
+    F(touch_2KB_10_loads),
+    F(touch_2KB_12_loads),
+    F(touch_2KB_14_loads),
+    F(touch_2KB_16_loads),
+    F(touch_2KB_18_loads),
+    F(touch_2KB_19_loads),
+    F(touch_2KB_20_loads),
+    F(touch_2KB_21_loads),
+    F(touch_2KB_22_loads),
+    F(touch_2KB_24_loads),
+    F(touch_2KB_32_loads),
+    F(touch_2KB_40_loads),
+    F(touch_2KB_48_loads),
+    F(touch_2KB_64_loads),
     F(touch_4KB),
     F(touch_8KB),
     F(touch_16KB),
