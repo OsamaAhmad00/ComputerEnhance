@@ -87,9 +87,14 @@ Function functions[] = {
 };
 
 constexpr uint64_t max_width = 1ULL << 30;
-std::byte arr[max_width];
+alignas(1 << 12) std::byte arr[max_width];
 
 void test(size_t n, size_t repetitions) {
+    for (int i = 0; i < max_width; i += (1 << 12)) {
+        // Write (not only read) to every page so
+        // that it gets allocated before passing it
+        arr[i] = static_cast<std::byte>(0xFF);
+    }
     auto freq = estimate_tsc_frequency(100);
     auto functions_count = std::size(functions);
     std::vector<RepetitionTester> testers;
